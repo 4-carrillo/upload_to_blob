@@ -2,6 +2,10 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from azure.storage.blob import BlobServiceClient
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 app = FastAPI()
 
 @app.get("/")
