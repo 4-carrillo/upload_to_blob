@@ -4,6 +4,10 @@ import os
 
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return {"Health": "Ok"}
+
 @app.post("/upload-csv")
 async def upload_csv(
     file: UploadFile = File(...),
