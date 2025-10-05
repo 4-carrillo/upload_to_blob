@@ -6,7 +6,7 @@ on:
       - main  # or your deployment branch
 
 env:
-  AZURE_WEBAPP_NAME: upload-to-blob
+  AZURE_WEBAPP_NAME: upload-blob-storage
   AZURE_REGISTRY: exopacr.azurecr.io
   IMAGE_NAME: acr_exo_upload
 
