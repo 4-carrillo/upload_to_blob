@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from azure.storage.blob import BlobServiceClient
 import os
 
@@ -8,9 +9,20 @@ load_dotenv()
 
 app = FastAPI()
 
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+
 @app.get("/")
 def read_root():
     return {"Health": "Ok"}
+
 
 @app.post("/upload-csv")
 async def upload_csv(
@@ -18,12 +30,16 @@ async def upload_csv(
     path: str = Form(...),  # e.g., path="dataset/user123/data.csv"
 ):
     if not path.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="The provided path must end with '.csv'.")
+        raise HTTPException(
+            status_code=400, detail="The provided path must end with '.csv'."
+        )
 
     try:
         contents = await file.read()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Could not read uploaded file: {e}")
+        raise HTTPException(
+            status_code=400, detail=f"Could not read uploaded file: {e}"
+        )
 
     # Azure credentials from environment
     account_url = os.getenv("AZURE_ACCOUNT_URL")
@@ -31,15 +47,23 @@ async def upload_csv(
     container_name = "artifacts"
 
     if not account_url or not sas_token:
-        raise HTTPException(status_code=500, detail="Azure credentials are not configured properly.")
+        raise HTTPException(
+            status_code=500, detail="Azure credentials are not configured properly."
+        )
 
     try:
-        blob_service_client = BlobServiceClient(account_url=account_url, credential=sas_token)
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=path)
+        blob_service_client = BlobServiceClient(
+            account_url=account_url, credential=sas_token
+        )
+        blob_client = blob_service_client.get_blob_client(
+            container=container_name, blob=path
+        )
 
         # Upload file contents as .csv
         blob_client.upload_blob(contents, overwrite=True)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error uploading to Azure Blob Storage: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error uploading to Azure Blob Storage: {e}"
+        )
 
     return {"message": "Upload successful", "blob_path": path}
